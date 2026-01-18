@@ -373,6 +373,7 @@ async def _handleHotAv(q, cache):
     print(f'耗时 ---{end_time}')
 
     if len(urls_links) > 0:
+        print(f"一共 {len(urls_links)}")
         return {"message": urls_links}
     return {"message": []}
 
