@@ -1,0 +1,27 @@
+name: 弹幕
+
+on:
+  schedule:
+    - cron: "0 */5 * * *"
+
+  workflow_dispatch:
+
+concurrency:
+  group: production
+  cancel-in-progress: true
+
+jobs:
+  danmu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1.checkout
+        uses: actions/checkout@v4
+
+      - name: 2 配置环境
+        run: | 
+          pip install -r requirements.txt
+          python app.py
+
+      - name: 3.cloudflare
+        run: |
+          run: docker run --network="host" cloudflare/cloudflared:latest tunnel --no-autoupdate run --token ${{secrets.CLOUDFLARE_TOKEN}}
