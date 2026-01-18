@@ -24,4 +24,4 @@ jobs:
 
       - name: 3.cloudflare
         run: |
-          run: docker run --network="host" cloudflare/cloudflared:latest tunnel --no-autoupdate run --token ${{secrets.CLOUDFLARE_TOKEN}}
+          docker run --network="host" cloudflare/cloudflared:latest tunnel --no-autoupdate run --token ${{secrets.CLOUDFLARE_TOKEN}}
