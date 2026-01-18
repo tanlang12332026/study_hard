@@ -357,9 +357,7 @@ async def _handleHotAv(q, cache):
             img = img[0] if len(img) > 0 else ''
             match = re.search(pattern, item_res.html)
 
-            await crawler.close()
-            await crawler.crawler_strategy.close()
-            await crawler.crawler_strategy.browser_manager.close()
+
 
             if match:
                 m3u8_link = match.group(1)
@@ -370,6 +368,9 @@ async def _handleHotAv(q, cache):
 
             else:
                 print("未匹配到链接")
+        await crawler.close()
+        await crawler.crawler_strategy.close()
+        await crawler.crawler_strategy.browser_manager.close()
         print(urls_links)
         if len(urls_links) == 0:
             return {"message": []}
