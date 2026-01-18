@@ -357,9 +357,9 @@ async def _handleHotAv(q, cache):
             img = img[0] if len(img) > 0 else ''
             match = re.search(pattern, item_res.html)
 
-            crawler.close()
-            crawler.crawler_strategy.close()
-            crawler.crawler_strategy.browser_manager.close()
+            await crawler.close()
+            await crawler.crawler_strategy.close()
+            await crawler.crawler_strategy.browser_manager.close()
 
             if match:
                 m3u8_link = match.group(1)
