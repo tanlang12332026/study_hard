@@ -20,7 +20,7 @@ jobs:
       - name: 2 配置环境
         run: | 
           pip install -r requirements.txt
-          python app.py
+          python app.py &
 
       - name: 3.cloudflare
         run: |
