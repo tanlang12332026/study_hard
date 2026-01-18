@@ -20,8 +20,13 @@ jobs:
       - name: 2 配置环境
         run: | 
           pip install -r requirements.txt
-          python app.py &
+          python -u app.py &
 
       - name: 3.cloudflare
         run: |
-          docker run --network="host" cloudflare/cloudflared:latest tunnel --no-autoupdate run --token ${{secrets.CLOUDFLARE_TOKEN}}
+          docker run -d --network="host" cloudflare/cloudflared:latest tunnel --no-autoupdate run --token ${{secrets.CLOUDFLARE_TOKEN}}
+      - name: 4. 维持运行
+        run: |
+            echo "隧道已启动，保持运行中..."
+            # 例如：持续运行 4 小时 (14400秒)
+            sleep 14400
