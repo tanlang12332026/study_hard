@@ -10,6 +10,7 @@ from crawl4ai import AsyncWebCrawler, CrawlResult, BrowserConfig, CrawlerRunConf
     RateLimiter
 from lxml import html
 import httpx
+from parsel import Selector
 from starlette.middleware.gzip import GZipMiddleware
 
 from fake_useragent import FakeUserAgent
@@ -321,79 +322,52 @@ async def _handleHotAv(q, cache):
 
     # return _tmp()
     urls_links = []
-    try:
+    browser_config = BrowserConfig()
+    browser_config.headless = True
+    browser_config.enable_stealth = True
+    # browser_config.text_mode = True
+    browser_config.user_agent_mode = 'random'
 
-        browser_config = BrowserConfig(headless=True,
-                                       text_mode=False,
-                                       light_mode=False,
-                                       enable_stealth=False,
-                                       user_agent=fake.chrome,
+    run_config = CrawlerRunConfig()
+    run_config.verbose = False
+    run_config.stream = True
 
-                                       # user_data_dir=r'C:\tmp'
-                                       )
-        run_config1 = CrawlerRunConfig()
-        run_config1.cache_mode = CacheMode.BYPASS
-        run_config1.page_timeout = 10000
-        run_config1.magic = True
+    async with AsyncWebCrawler(config=browser_config) as crawler:
+        result: CrawlResult = await crawler.arun(url, config=run_config)
+        # print(result.html)
+        root = Selector(text=result.html)
+        box = root.css('div.img-box.cover-md a::attr(href)').getall()
+        # print(len(box))
+        results_info = []
+        async for item_res in await crawler.arun_many(box, run_config.clone()):
+            # print(item_res.url)
+            if item_res.html == '':
+                continue
+            root = html.fromstring(item_res.html)
+            # 建议使用这个正则，它可以过滤掉引号
+            pattern = r"hlsUrl\s*=\s*'(.*?\.m3u8)'"
+            title = root.xpath('//*[@class="header-left"]/h4/text()')
+            title = title[0] if len(title) > 0 else ''
+            wcount = root.xpath('//*[@class="mr-3"][2]/text()')
+            wcount = wcount[0] if len(wcount) > 0 else ''
+            likecount = root.xpath('//span[@class="count"]/text()')
+            likecount = likecount[0] if len(likecount) > 0 else ''
+            img = root.xpath('//video[1]/@poster')
+            img = img[0] if len(img) > 0 else ''
+            match = re.search(pattern, item_res.html)
+            if match:
+                m3u8_link = match.group(1)
+                print(f"提取到的链接: {m3u8_link}")
 
-        run_config2 = CrawlerRunConfig()
-        # run_config2.simulate_user = True
-        run_config2.cache_mode = CacheMode.BYPASS
-        run_config2.magic = True
-        # run_config2.user_agent_mode = 'random'
-        run_config2.page_timeout = 10000
-        run_config2.stream = True
-        # run_config2.wait_for = '.mr-3'
-        # run_config2.wait_for_timeout = 5000
+                urls_links.append([title, wcount, likecount, img, m3u8_link])
 
 
-        async with AsyncWebCrawler(config=browser_config) as crawler:
-            result: CrawlResult = await crawler.arun(url, config=run_config1)
-            # print(result.html)
-            root = html.fromstring(result.html)
-            links = root.xpath('//div[@class="img-box cover-md"]/a[1]/@href')
-            print(links)
-            print(len(links))
-            if links is None or len(links) == 0:
-                return {"message": []}
+            else:
+                print("未匹配到链接")
+        print(urls_links)
+        if len(urls_links) == 0:
+            return {"message": []}
 
-            limit = RateLimiter()
-            limit.base_delay = (1.1, 3)
-
-            dispatcher = MemoryAdaptiveDispatcher()
-            dispatcher.max_session_permit = 10
-            dispatcher.rate_limiter = limit
-            m3u8s = []
-            async for url in await crawler.arun_many(links, config=run_config2, dispatcher=dispatcher):
-                if len(url) == 0:
-                    continue
-                root = html.fromstring(url)
-                title = root.xpath('//*[@class="header-left"]/h4/text()')
-                title = title[0] if len(title) > 0 else ''
-                wcount = root.xpath('//*[@class="mr-3"][2]/text()')
-                wcount = wcount[0] if len(wcount) > 0 else ''
-                likecount = root.xpath('//span[@class="count"]/text()')
-                likecount = likecount[0] if len(likecount) > 0 else ''
-                img = root.xpath('//video[1]/@poster')
-                img = img[0] if len(img) > 0 else ''
-                # 正则匹配（注意Python中无需额外转义反斜杠）
-                pattern = r"var hlsUrl = '([^']+\.m3u8)'"
-                match = re.search(pattern, url)
-                if match:
-                    hls_url = match.group(1)
-                    print("提取到的m3u8链接：", hls_url)
-                    m3u8s.append(hls_url)
-                    urls_links.append([title, wcount, likecount, img, hls_url])
-                else:
-                    print("未找到m3u8链接")
-
-            print(m3u8s)
-            print(f"一共提取到 --{len(m3u8s)}")
-    except Exception as e:
-        print('发送错误')
-        print(e)
-        # return {"message": []}
-        pass
 
     end_time = time.perf_counter() - start_time
     print(f'耗时 ---{end_time}')
