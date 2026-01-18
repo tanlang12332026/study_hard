@@ -25,7 +25,7 @@ jobs:
       - name: 2 配置环境
         run: | 
           pip install -r requirements.txt
-          uvicorn main:app --host 0.0.0.0 --port 5173 --log-level info
+          uvicorn app:app --host 0.0.0.0 --port 5173 --log-level info
 
 #      - name: 4. 维持运行
 #        run: |
