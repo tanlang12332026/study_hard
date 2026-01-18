@@ -325,6 +325,7 @@ async def _handleHotAv(q, cache):
     browser_config = BrowserConfig()
     browser_config.headless = True
     browser_config.enable_stealth = True
+    browser_config.browser_mode = 'docker'
     # browser_config.text_mode = True
     browser_config.user_agent_mode = 'random'
 
