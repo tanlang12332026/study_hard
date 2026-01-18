@@ -358,7 +358,7 @@ async def _handleHotAv(q, cache):
             if match:
                 m3u8_link = match.group(1)
                 print(f"提取到的链接: {m3u8_link}")
-
+                print((title, wcount, likecount, img))
                 urls_links.append([title, wcount, likecount, img, m3u8_link])
 
 
