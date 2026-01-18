@@ -17,16 +17,18 @@ jobs:
       - name: 1.checkout
         uses: actions/checkout@v4
 
-      - name: 2 配置环境
-        run: | 
-          pip install -r requirements.txt
-          python -u app.py &
 
       - name: 3.cloudflare
         run: |
           docker run -d --network="host" cloudflare/cloudflared:latest tunnel --no-autoupdate run --token ${{secrets.CLOUDFLARE_TOKEN}}
-      - name: 4. 维持运行
-        run: |
-            echo "隧道已启动，保持运行中..."
-            # 例如：持续运行 4 小时 (14400秒)
-            sleep 14400
+
+      - name: 2 配置环境
+        run: | 
+          pip install -r requirements.txt
+          uvicorn main:app --host 0.0.0.0 --port 5173 --log-level info
+
+#      - name: 4. 维持运行
+#        run: |
+#            echo "隧道已启动，保持运行中..."
+#            # 例如：持续运行 4 小时 (14400秒)
+#            sleep 14400
