@@ -127,9 +127,9 @@ async def _handleSearchKVM(q:str, cache: bool):
             return {"message": []}
 
         tasks = []
-        for i in links:
+        for (index, i) in enumerate(links):
             sps = link.split('&')
-            sing_link = sps[0] + '&' + sps[1] + '&' + 'ep=' + i
+            sing_link = sps[0] + '&' + sps[1] + '&' + 'ep=' + str(index)
             task = asyncio.create_task(_handm3u8_mp4(i, crawler, sing_link, run_config2))
             tasks.append(task)
 
