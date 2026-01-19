@@ -8,7 +8,7 @@ on:
     inputs:
       reason:
         description: '触发原因'
-        default: 'API 调用'
+        default: '手动 调用'
 
 concurrency:
   group: production
