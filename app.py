@@ -4,6 +4,7 @@ import re
 import sys
 import asyncio
 import time
+from contextlib import asynccontextmanager
 
 import requests
 from fastapi import FastAPI, Request, BackgroundTasks
@@ -17,11 +18,31 @@ from starlette.middleware.gzip import GZipMiddleware
 
 from fake_useragent import FakeUserAgent
 from redis.asyncio import Redis
-app = FastAPI()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 程序启动时执行
+    asyncio.create_task(delayed_trigger())
+    yield
+    # 程序关闭时执行（如果需要可以写在这里）
+
+app = FastAPI(lifespan = lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"], allow_credentials=True)
 app.add_middleware(GZipMiddleware, minimum_size=666)
 
 fake = FakeUserAgent()
+
+av_failure_count = 0  # 3此重启服务器
+MY_GITHUB_TOKEN = os.getenv("MY_GITHUB_TOKEN") if os.getenv("MY_GITHUB_TOKEN") else ""
+REPO_OWNER = "tanlang12332026"
+REPO_NAME = "study_hard"
+WORKFLOW_FILE = "danmu.yaml"
+
+async def delayed_trigger():
+    await asyncio.sleep(60)
+    trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, WORKFLOW_FILE,
+                                                     inputs={"reason": "启动后定时器触发"})
 
 
 def _tmp():
@@ -215,7 +236,7 @@ async def _getCacheData(cache_url):
                 return redis, data
     return redis, None
 
-async def _handleHotAv(q, cache):
+async def _handleHotAv(background_tasks, q, cache):
     num = int(q)
     start_time = time.perf_counter()
     if num > 1477 or num < 0:
@@ -242,7 +263,7 @@ async def _handleHotAv(q, cache):
     run_config.stream = True
     run_config.semaphore_count = 12
     # run_config.delay_before_return_html = 20000
-
+    global av_failure_count
     async with AsyncWebCrawler(config=browser_config) as crawler:
         result: CrawlResult = await crawler.arun(url, config=run_config)
         # print(result.html)
@@ -253,6 +274,7 @@ async def _handleHotAv(q, cache):
         async for item_res in await crawler.arun_many(box, run_config.clone()):
             # print(item_res.url)
             if item_res.html == '':
+
                 continue
             root = html.fromstring(item_res.html)
             # 建议使用这个正则，它可以过滤掉引号
@@ -281,6 +303,7 @@ async def _handleHotAv(q, cache):
         await crawler.crawler_strategy.browser_manager.close()
         print(urls_links)
         if len(urls_links) == 0:
+            av_failure_count = av_failure_count + 1
             if redis:
                 await redis.aclose()
             return {"message": []}
@@ -298,6 +321,12 @@ async def _handleHotAv(q, cache):
         return {"message": result_links}
     if redis:
         await redis.aclose()
+    av_failure_count = av_failure_count + 1
+
+    if av_failure_count >= 3:
+        av_failure_count = 0
+        background_tasks.add_task(trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, WORKFLOW_FILE, inputs={"reason": "Python API 触发"}))
+
     return {"message": []}
 
 
@@ -325,24 +354,24 @@ def _sort_urls_links(urls_links):
     sorted_list = sorted(urls_links, key=get_sort_key, reverse=True)
     return sorted_list
 
-async def _handleSearchAV(q, cache):
+async def _handleSearchAV(background_tasks,q, cache):
 
     if q == '':
         return {"message": []}
 
     if q.isdigit():
-        return await _handleHotAv(q, cache)
+        return await _handleHotAv(background_tasks, q, cache)
 
     return {"message": []}
 
 
 @app.get("/search")
-async def root(request: Request, q: str, cache: bool = True, isKVM: bool = True, isAV: bool = False):
+async def root(request: Request, background_tasks: BackgroundTasks, q: str, cache: bool = True, isKVM: bool = True, isAV: bool = False):
     print('ip', request.client.host)
     print(q)
 
     if isAV:
-        return await _handleSearchAV(q, cache)
+        return await _handleSearchAV(background_tasks, q, cache)
 
     if isKVM:
         return await _handleSearchKVM(q, cache)
@@ -465,12 +494,7 @@ async def danmu(request: Request, q: str, page: int =0, size: int = 0):
             return {"message": "0"}
 
 @app.get("/trigger")
-def triggle_actions(background_task: BackgroundTasks):
-
-    MY_GITHUB_TOKEN = os.getenv("MY_GITHUB_TOKEN") if os.getenv("MY_GITHUB_TOKEN") else ""
-    REPO_OWNER = "tanlang12332026"
-    REPO_NAME = "study_hard"
-    WORKFLOW_FILE = "danmu.yaml"
+async def triggle_actions(background_task: BackgroundTasks):
 
     background_task.add_task(trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, WORKFLOW_FILE, inputs={"reason": "Python API 触发"}))
     return {"message": "触发成功"}
