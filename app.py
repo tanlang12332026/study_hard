@@ -188,7 +188,7 @@ async def _handleHotAv(q, cache):
     # return _tmp()
     urls_links = []
     browser_config = BrowserConfig()
-    browser_config.headless = False
+    browser_config.headless = True
     browser_config.enable_stealth = True
     browser_config.browser_mode = 'docker' if redis else 'dedicated'
     # browser_config.text_mode = True
