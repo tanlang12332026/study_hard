@@ -171,10 +171,11 @@ async def _handleHotAv(q, cache):
     REDIS_URL = os.environ.get('REDIS_URL', None)
     redis = None
     try:
+        print('redis url', REDIS_URL)
         redis = Redis.from_url(REDIS_URL, decode_responses=True)
         print("redis---- :", await redis.ping())
     except Exception as e:
-        print(e)
+        print("错误了", e, "REDIS_URL", REDIS_URL)
 
     if redis:
         res = await redis.get(cache_url)
