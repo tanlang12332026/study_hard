@@ -381,8 +381,33 @@ async def _handleHotAv(q, cache):
 
     if len(urls_links) > 0:
         print(f"一共 {len(urls_links)}")
-        return {"message": urls_links}
+        return {"message": _sort_urls_links(urls_links)}
     return {"message": []}
+
+
+def _sort_urls_links(urls_links):
+    """
+    对二维数组 urls_links 按内部数组下标1的数字（字符串/数字）降序排序
+    :param urls_links: 待排序的二维数组
+    :return: 排序后的新数组（原数组不变）
+    """
+
+    def get_sort_key(item):
+        """自定义排序key：提取下标1的元素并转为数字，处理异常"""
+        try:
+            # 确保能取到下标1的元素，且能转为浮点数（兼容整数/小数）
+            value = item[1]
+            # 如果是字符串，先去除首尾空格再转换
+            if isinstance(value, str):
+                value = value.strip()
+            return float(value)
+        except (IndexError, ValueError):
+            # 下标越界/非数字时，返回最小的数（排到最后）
+            return float('-inf')
+
+    # 用sorted排序，reverse=True降序，key指定排序依据
+    sorted_list = sorted(urls_links, key=get_sort_key, reverse=True)
+    return sorted_list
 
 async def _handleSearchAV(q, cache):
 
