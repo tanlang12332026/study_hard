@@ -5,7 +5,8 @@ import sys
 import asyncio
 import time
 
-from fastapi import FastAPI, Request
+import requests
+from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from crawl4ai import AsyncWebCrawler, CrawlResult, BrowserConfig, CrawlerRunConfig, CacheMode, MemoryAdaptiveDispatcher, \
     RateLimiter
@@ -463,6 +464,53 @@ async def danmu(request: Request, q: str, page: int =0, size: int = 0):
         else:
             return {"message": "0"}
 
+@app.get("/trigger")
+def triggle_actions(background_task: BackgroundTasks):
+
+    MY_GITHUB_TOKEN = os.getenv("MY_GITHUB_TOKEN") if os.getenv("MY_GITHUB_TOKEN") else ""
+    REPO_OWNER = "tanlang12332026"
+    REPO_NAME = "study_hard"
+    WORKFLOW_FILE = "danmu.yaml"
+
+    background_task.add_task(trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, WORKFLOW_FILE, inputs={"reason": "Python API 触发"}))
+    return {"message": "触发成功"}
+
+def trigger_github_actions(
+        token: str,
+        owner: str,
+        repo: str,
+        workflow_id: str,
+        branch: str = "main",
+        inputs: dict = None
+):
+    """
+    通过 API 触发 GitHub Actions 工作流
+    :param token: GitHub PAT
+    :param owner: 仓库所有者
+    :param repo: 仓库名
+    :param workflow_id: 工作流文件名/ID
+    :param branch: 触发的分支
+    :param inputs: 工作流入参（对应 workflow_dispatch 的 inputs）
+    :return: 响应结果
+    """
+    url = f"https://api.github.com/repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches"
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {token}",
+        "X-GitHub-Api-Version": "2022-11-28"
+    }
+    data = {
+        "ref": branch,
+        "inputs": inputs or {}
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+    if response.status_code == 204:
+        print("工作流触发成功！")
+        return lambda : True
+    else:
+        print(f"触发失败：{response.status_code} - {response.text}")
+        return lambda : False
 
 
 if __name__ == "__main__":
