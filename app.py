@@ -40,7 +40,7 @@ REPO_NAME = "study_hard"
 WORKFLOW_FILE = "danmu.yaml"
 
 async def delayed_trigger():
-    await asyncio.sleep(60)
+    await asyncio.sleep(60 * 20)
     trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, WORKFLOW_FILE,
                                                      inputs={"reason": "启动后定时器触发"})
 
