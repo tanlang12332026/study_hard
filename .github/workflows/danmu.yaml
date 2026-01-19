@@ -27,6 +27,7 @@ jobs:
         with:
           python-version: '3.11' # 建议指定具体版本
           cache: 'pip'           # 这里开启 pip 缓存
+          cache-dependency-path: 'requirements.txt'  # 明确缓存依赖文件路径
 
       # --- 优化点 2: 缓存 Playwright 浏览器 ---
       - name: Cache Playwright Browsers
