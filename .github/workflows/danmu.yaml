@@ -5,6 +5,10 @@ on:
     - cron: "*/20 * * * *"
 
   workflow_dispatch:
+    inputs:
+      reason:
+        description: '触发原因'
+        default: 'API 调用'
 
 concurrency:
   group: production
