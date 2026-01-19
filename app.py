@@ -399,7 +399,7 @@ def _sort_urls_links(urls_links):
             value = item[1]
             # 如果是字符串，先去除首尾空格再转换
             if isinstance(value, str):
-                value = value.strip()
+                value = value.replace(' ', '')
             return float(value)
         except (IndexError, ValueError):
             # 下标越界/非数字时，返回最小的数（排到最后）
