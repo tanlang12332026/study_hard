@@ -327,11 +327,13 @@ async def _handleHotAv(q, cache):
     browser_config.enable_stealth = True
     browser_config.browser_mode = 'docker'
     # browser_config.text_mode = True
-    browser_config.user_agent_mode = 'random'
+    browser_config.user_agent = fake.chrome
+    browser_config.user_data_dir = '/home'
 
     run_config = CrawlerRunConfig()
     run_config.verbose = False
     run_config.stream = True
+    run_config.semaphore_count = 12
 
     async with AsyncWebCrawler(config=browser_config) as crawler:
         result: CrawlResult = await crawler.arun(url, config=run_config)
