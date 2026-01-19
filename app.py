@@ -151,7 +151,7 @@ async def _handleSearchKVM(q:str, cache: bool):
     print(f'耗时 ---{end_time}')
     if len(urls) > 0:
         if redis:
-            await redis.setex(cache_url, 3600 * 6, json.dumps(urls))
+            await redis.setex(cache_url, 3600 * 3, json.dumps(urls))
             await redis.aclose()
 
         if redis:
