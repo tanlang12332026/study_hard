@@ -350,9 +350,9 @@ async def _handleHotAv(q, cache):
             title = root.xpath('//*[@class="header-left"]/h4/text()')
             title = title[0] if len(title) > 0 else ''
             wcount = root.xpath('//*[@class="mr-3"][2]/text()')
-            wcount = wcount[0] if len(wcount) > 0 else ''
+            wcount = wcount[0] if len(wcount) > 0 else '0'
             likecount = root.xpath('//span[@class="count"]/text()')
-            likecount = likecount[0] if len(likecount) > 0 else ''
+            likecount = likecount[0] if len(likecount) > 0 else '0'
             img = root.xpath('//video[1]/@poster')
             img = img[0] if len(img) > 0 else ''
             match = re.search(pattern, item_res.html)
