@@ -52,6 +52,13 @@ async def root(request: Request):
 
 
 async def _handleSearchKVM(q:str, cache: bool):
+
+    cache_url = f"https://www.4kvm.org/xssearch?s={q}"
+    redis, data = await _getCacheData(cache_url)
+    if redis and data:
+        await redis.aclose()
+        return {"message": data}
+
     start_time = time.perf_counter()
     browser_config = BrowserConfig(headless=True, text_mode=True, light_mode=True)
     run_config1 = CrawlerRunConfig()
@@ -63,21 +70,27 @@ async def _handleSearchKVM(q:str, cache: bool):
     # run_config2.delay_before_return_html = 2
     urls = []
     async with AsyncWebCrawler(config=browser_config) as crawler:
-        result: CrawlResult = await crawler.arun(f"https://www.4kvm.org/xssearch?s={q}", config=run_config1)
+        result: CrawlResult = await crawler.arun(cache_url, config=run_config1)
         # print(result.html)
         if len(result.html) == 0:
-            return {"message": "0"}
+            if redis:
+                await redis.aclose()
+            return {"message": []}
         root = html.fromstring(result.html)
         link = root.xpath('//div[@class="result-item"][1]//a/@href')
         link = link[0] if len(link) > 0 else None
         if link is None:
-            return {"message": "0"}
+            if redis:
+                await redis.aclose()
+            return {"message": []}
         result: CrawlResult = await crawler.arun(link, config=run_config1)
         root = html.fromstring(result.html)
         link = root.xpath('//*[@class="se-q"]/a[1]/@href')
         link = link[0] if len(link) > 0 else None
         if link is None:
-            return {"message": "0"}
+            if redis:
+                await redis.aclose()
+            return {"message": []}
         # 视频详情页
         result: CrawlResult = await crawler.arun(link, config=run_config1)
         root = html.fromstring(result.html)
@@ -87,7 +100,9 @@ async def _handleSearchKVM(q:str, cache: bool):
 
         link = link[0] if len(link) > 0 else None
         if link is None:
-            return {"message": "0"}
+            if redis:
+                await redis.aclose()
+            return {"message": []}
 
         tasks = []
         for i in links:
@@ -113,8 +128,16 @@ async def _handleSearchKVM(q:str, cache: bool):
     end_time = time.perf_counter() - start_time
     print(f'耗时 ---{end_time}')
     if len(urls) > 0:
+        if redis:
+            await redis.setex(cache_url, 3600 * 6, json.dumps(urls))
+            await redis.aclose()
+
+        if redis:
+            await redis.aclose()
         return {"message": [urls]}
-    return {"message": "0"}
+    if redis:
+        await redis.aclose()
+    return {"message": []}
 
 async def _handm3u8_mp4(page, crawler, link, run_config2):
     result: CrawlResult = await crawler.arun(link, config=run_config2)
@@ -159,16 +182,18 @@ async def _handm3u8_mp4(page, crawler, link, run_config2):
 
     return (page, first_matched_url, mp4)
 
-
-async def _handleHotAv(q, cache):
-    num = int(q)
-    start_time = time.perf_counter()
-    if num > 1477 or num < 0:
-        return {"message": []}
-    time_now = int(time.time() * 1000)
-    url = f"https://jable.tv/hot/{num}/?mode=async&function=get_block&block_id=list_videos_common_videos_list&sort_by=video_viewed&_={time_now}"
-    cache_url = f"https://jable.tv/hot/{num}/"
+async def _getCacheData(cache_url):
+    print('cache_url', cache_url)
     REDIS_URL = os.environ.get('REDIS_URL', None)
+    redis_url = None
+    try:
+        from redis_config import REDIS_URL as redis_url2
+        redis_url = redis_url2
+    except ImportError:
+        pass
+
+    REDIS_URL = redis_url if REDIS_URL is None else REDIS_URL
+
     redis = None
     try:
         print('redis url', REDIS_URL)
@@ -179,12 +204,28 @@ async def _handleHotAv(q, cache):
 
     if redis:
         res = await redis.get(cache_url)
-        print("cache_url redis---- :", res)
+        time2= await redis.ttl(cache_url)
+        print("命中缓存 cache_url redis---- :", res)
+        if time2 > 0:
+            print("缓存时间", time2)
         if res:
             data = json.loads(res)
             if data and len(data) > 0:
-                return {"message": data}
+                return redis, data
+    return redis, None
 
+async def _handleHotAv(q, cache):
+    num = int(q)
+    start_time = time.perf_counter()
+    if num > 1477 or num < 0:
+        return {"message": []}
+    time_now = int(time.time() * 1000)
+    url = f"https://jable.tv/hot/{num}/?mode=async&function=get_block&block_id=list_videos_common_videos_list&sort_by=video_viewed&_={time_now}"
+    cache_url = f"https://jable.tv/hot/{num}/"
+    redis, data = await _getCacheData(cache_url)
+    if redis and data:
+        await redis.aclose()
+        return {"message": data}
 
     # return _tmp()
     urls_links = []
@@ -239,6 +280,8 @@ async def _handleHotAv(q, cache):
         await crawler.crawler_strategy.browser_manager.close()
         print(urls_links)
         if len(urls_links) == 0:
+            if redis:
+                await redis.aclose()
             return {"message": []}
 
 
@@ -250,8 +293,10 @@ async def _handleHotAv(q, cache):
         result_links = _sort_urls_links(urls_links)
         if len(result_links) > 15 and redis:
             await redis.setex(cache_url, 7200, json.dumps(result_links))
-            await redis.close()
+            await redis.aclose()
         return {"message": result_links}
+    if redis:
+        await redis.aclose()
     return {"message": []}
 
 
@@ -301,6 +346,12 @@ async def root(request: Request, q: str, cache: bool = True, isKVM: bool = True,
     if isKVM:
         return await _handleSearchKVM(q, cache)
 
+    cache_url = f"https://v.ikanbot.com/search?q={q}"
+    redis, data = await _getCacheData(cache_url)
+    if redis and data:
+        await redis.aclose()
+        return {"message": data}
+
     browser_config = BrowserConfig(headless=True, text_mode=True, light_mode=True)
 
     run_config1 = CrawlerRunConfig()
@@ -314,7 +365,7 @@ async def root(request: Request, q: str, cache: bool = True, isKVM: bool = True,
         await asyncio.sleep(0.1)
 
     async with AsyncWebCrawler(config=browser_config) as crawler:
-        result: CrawlResult = await crawler.arun(f"https://v.ikanbot.com/search?q={q}", config=run_config1)
+        result: CrawlResult = await crawler.arun(cache_url, config=run_config1)
         if len(result.html) == 0: return {"message": "0"}
         root = html.fromstring(result.html)
         links = root.xpath('//*[@class="media-heading"]/a/@href')
@@ -336,10 +387,14 @@ async def root(request: Request, q: str, cache: bool = True, isKVM: bool = True,
             print("线路 ", len(m3u8links))
 
             print("集数 ", len(m3u8links[0]))
-
+            if redis:
+                await redis.setex(cache_url, 3600 * 6, json.dumps(m3u8links))
+                await redis.aclose()
             return {"message": m3u8links}
         else:
-            return {"message": "not found"}
+            if redis:
+                await redis.aclose()
+            return {"message": []}
 @app.get("/danmu")
 async def danmu(request: Request, q: str, page: int =0, size: int = 0):
     print(q, str)
