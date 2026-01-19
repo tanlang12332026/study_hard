@@ -317,8 +317,8 @@ async def _handleHotAv(q, cache):
     start_time = time.perf_counter()
     if num > 1477 or num < 0:
         return {"message": []}
-
-    url = f"https://jable.tv/hot/{num}/"
+    time_now = int(time.time() * 1000)
+    url = f"https://jable.tv/hot/{num}/?mode=async&function=get_block&block_id=list_videos_common_videos_list&sort_by=video_viewed&_={time_now}"
 
     # return _tmp()
     urls_links = []
