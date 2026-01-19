@@ -14,22 +14,38 @@ jobs:
   danmu:
     runs-on: ubuntu-latest
     steps:
-      - name: 1.checkout
+      - name: 1. Checkout 代码
         uses: actions/checkout@v4
 
+      # --- 优化点 1: 配置 Python 并开启内置 pip 缓存 ---
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' # 建议指定具体版本
+          cache: 'pip'           # 这里开启 pip 缓存
 
-      - name: 3.cloudflare
+      # --- 优化点 2: 缓存 Playwright 浏览器 ---
+      - name: Cache Playwright Browsers
+        id: playwright-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright  # Playwright 在 Linux 下的默认下载路径
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/requirements.txt') }}
+
+      - name: 2. 安装依赖
         run: |
-          docker run -d --network="host" cloudflare/cloudflared:latest tunnel --no-autoupdate run --token ${{secrets.CLOUDFLARE_TOKEN}}
-
-      - name: 2 配置环境
-        run: | 
           pip install -r requirements.txt
-          python -m playwright install --with-deps chromium
-          uvicorn app:app --host 0.0.0.0 --port 5173 --log-level info
 
-#      - name: 4. 维持运行
-#        run: |
-#            echo "隧道已启动，保持运行中..."
-#            # 例如：持续运行 4 小时 (14400秒)
-#            sleep 14400
+      # 只有当缓存没命中时，才去下载浏览器
+      - name: Install Playwright
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: python -m playwright install --with-deps chromium
+
+      # --- 3. 启动服务 ---
+      - name: 3. 启动 Cloudflare 和 Uvicorn
+        run: |
+          # 以后台模式启动 Cloudflare
+          docker run -d --network="host" cloudflare/cloudflared:latest tunnel --no-autoupdate run --token ${{secrets.CLOUDFLARE_TOKEN}}
+          
+          # 启动应用
+          uvicorn app:app --host 0.0.0.0 --port 5173 --log-level info
