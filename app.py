@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import sys
 import asyncio
@@ -14,7 +15,7 @@ from parsel import Selector
 from starlette.middleware.gzip import GZipMiddleware
 
 from fake_useragent import FakeUserAgent
-
+from redis.asyncio import Redis
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"], allow_credentials=True)
 app.add_middleware(GZipMiddleware, minimum_size=666)
@@ -32,160 +33,7 @@ def _tmp():
                 "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56178/preview.jpg",
                 "https://adoda-smart-coin.mushroomtrack.com/hls/x1w6QYDRHx11A-AMOM4NEg/1768756150/56000/56178/56178.m3u8"
             ],
-            [
-                "DVAJ-726 彼女が3日間家族旅行で家を空けるというので、彼女の友達と3日間ハメまくった記録（仮） 宍戶里帆",
-                "223 828",
-                "1402",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56167/preview.jpg",
-                "https://honi-moly-yami.mushroomtrack.com/hls/16p6j3GgHtTvx00KfFQFmQ/1768755883/56000/56167/56167.m3u8"
-            ],
-            [
-                "ADN-750 無法原諒的女子 這女人不管欺負幾次為什麼都接受我… 星宮一花",
-                "268 895",
-                "2146",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56145/preview.jpg",
-                "https://asf-doc.mushroomtrack.com/hls/EBhUonCTcXZX2Z6qZjIFeA/1768755851/56000/56145/56145.m3u8"
-            ],
-            [
-                "IPZZ-728 去女友家過夜，結果一喝醉就變成接吻魔的女朋友的美乳辣妹姊姊色誘我…就在女友旁邊，被口水直流的貼身舌吻性愛弄到勃起停不下來，被無套內射榨取了18發的我 西宮夢",
-                "214 022",
-                "2985",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56216/preview.jpg",
-                "https://akuma-trstin.mushroomtrack.com/hls/U7dgKcBvO_OdkK2FOlGwSA/1768755836/56000/56216/56216.m3u8"
-            ],
-            [
-                "CAWD-916 和乖乖安靜的女學生，穿著制服就無套內射打炮，真是畜生老師 谷村凪咲",
-                "215 313",
-                "1205",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56179/preview.jpg",
-                "https://akuma-trstin.mushroomtrack.com/hls/L41pX2RapjHOUXWh_f_Lqg/1768756370/56000/56179/56179.m3u8"
-            ],
-            [
-                "DASS-833 路上で酔いつぶれ…汚い野良オトコ共達に拉致られヤク漬けに…中出し何発でもOK！キマってエビ反り昇天！絶対逃げられない！みんなの公共肉便器 葉月真由",
-                "235 226",
-                "1035",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56122/preview.jpg",
-                "https://akuma-trstin.mushroomtrack.com/hls/OuCd_8kCQDCkLE07GcKv8w/1768755975/56000/56122/56122.m3u8"
-            ],
-            [
-                "DVAJ-725 娘が脱ぎ散らかした制服をこっそり着ていた妻と鉢合わせ サイズの合わないムチパツ姿で恥じらうのがエロ可愛すぎて10数年ぶり学生気分に戻ってハメまくった 有岡みう",
-                "220 677",
-                "1876",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56166/preview.jpg",
-                "https://akuma-trstin.mushroomtrack.com/hls/2kn-ItzvF-kBSGZ89QYHxQ/1768755731/56000/56166/56166.m3u8"
-            ],
-            [
-                "IPZZ-748 氣質滿滿的美人姊姊散發費洛蒙 口水橫流把勃起的雞雞啃到一滴不剩，最棒的口交顏射 三澄寧寧",
-                "237 867",
-                "3602",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56220/preview.jpg",
-                "https://akuma-trstin.mushroomtrack.com/hls/9cdFO49q2alkMRjXGdf_3g/1768756552/56000/56220/56220.m3u8"
-            ],
-            [
-                "DASS-821 時間暫停！對著夢寐以求的美巨乳女主播 惡劣痴漢 把勃起的雞雞摩擦 不小心無套內射了 白峰美羽",
-                "206 994",
-                "3549",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56224/preview.jpg",
-                "https://adoda-smart-coin.mushroomtrack.com/hls/09WiXbqP13Ct08cGmXPOFw/1768755937/56000/56224/56224.m3u8"
-            ],
-            [
-                "ADN-742 「老公，對不起……」巨乳人妻的真面目 蘆名穗花",
-                "276 847",
-                "2337",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56142/preview.jpg",
-                "https://asf-doc.mushroomtrack.com/hls/lrRIKivpiOiKxG-1CAYNWw/1768756327/56000/56142/56142.m3u8"
-            ],
-            [
-                "JUR-535 毎晩旦那とヤリまくる絶倫叔母と一泊二日の搾精旅行 ヌカれまくって性に目覚めた童貞の僕は… すべて忘れて連続中出し交尾にハマってしまった。 白石茉莉奈",
-                "193 681",
-                "1629",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56126/preview.jpg",
-                "https://adoda-smart-coin.mushroomtrack.com/hls/uinqGCnK1RXkC8E3vcn5Ag/1768755720/56000/56126/56126.m3u8"
-            ],
-            [
-                "MKMP-698 女子アナ上納システムの実態 某テレビ局のアナウンサーが男性タレントの食い物にされた性被害の悲劇 尾崎惠梨香",
-                "238 578",
-                "1565",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56170/preview.jpg",
-                "https://akuma-trstin.mushroomtrack.com/hls/b2Fq5RUw8C0nCFZAAT9xpw/1768755781/56000/56170/56170.m3u8"
-            ],
-            [
-                "JUR-590 NTR肉串輪● 把我最愛的巨乳老婆猛烈幹下去 橘瑪麗",
-                "198 096",
-                "2942",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56231/preview.jpg",
-                "https://asf-doc.mushroomtrack.com/hls/65RSDp0Z-MAsk8s2hqtZfQ/1768755998/56000/56231/56231.m3u8"
-            ],
-            [
-                "JUR-565 「人生最後の勃起かもしれないんだ、一瞬だけでイイから挿れさせて！！」 勃起不全になった義父に同情して混浴したらまさかのフル勃起、相性抜群過ぎて馬乗り騎乗位で何度も生ハメ狂ってしまった私。 市來真尋",
-                "223 936",
-                "1283",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56127/preview.jpg",
-                "https://asf-doc.mushroomtrack.com/hls/sL5TyxWrEJI_K6gKKV-7qQ/1768756059/56000/56127/56127.m3u8"
-            ],
-            [
-                "ROYD-280 早上起來房間裡出現了一位浴衣都沒有穿好的後輩女同事！平常都對我很兇，不知道為什麼現在對我撒嬌... 黑島玲衣",
-                "533 694",
-                "5555",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56054/preview.jpg",
-                "https://astin-cowing.mushroomtrack.com/hls/m8dlrciq9cY4EqktXlj78Q/1768755774/56000/56054/56054.m3u8"
-            ],
-            [
-                "MVSD-662 沒想到幹練的巨乳OL女前輩會做這麼瘋狂的奶頭性愛！ 北野未奈",
-                "1 164 613",
-                "11080",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/55000/55908/preview.jpg",
-                "https://hot-box-gen.mushroomtrack.com/hls/UpY7UhhWB9B3JC1XZ-C34g/1768755904/55000/55908/55908.m3u8"
-            ],
-            [
-                "ROYD-278 幾年前學生時期強●我的那些男人，再次出現在眼前。剛從監獄出來的拷●魔，從早到晚對巨乳OL進行雙重播種內射壓制輪●… 北野未奈",
-                "627 197",
-                "4567",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56052/preview.jpg",
-                "https://asf-doc.mushroomtrack.com/hls/rJd8zBpvFRLA0yz4ehJaWg/1768755774/56000/56052/56052.m3u8"
-            ],
-            [
-                "SNOS-050 彼女、彼女の妹との温泉旅行で妹の方が二人きりになるたびに甘え密着ボディタッチからのおねだりキッス、 たまらず勃起するとジュボジュボしゃぶり始め暴発寸前チ●ポを色んな体位でハメてきて意のままに大量射精しちゃう恥ずかしい僕。 川越仁子",
-                "207 845",
-                "1825",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56109/preview.jpg",
-                "https://home-clone-clear.mushroomtrack.com/hls/Y2joD7d_Vda4qfLw5sA3oQ/1768756549/56000/56109/56109.m3u8"
-            ],
-            [
-                "START-480 どえっっろい素SEX解禁！ ホントはめっちゃキスが好きな小笠原菜乃の休日デートSEX 小笠原菜乃",
-                "220 128",
-                "1806",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56198/preview.jpg",
-                "https://anono-cloneing.mushroomtrack.com/hls/aY2GwSFwP--bLQ1LtFLSvA/1768755837/56000/56198/56198.m3u8"
-            ],
-            [
-                "SNOS-030 わたし、教え子たちに逆らえず 身動き取れない状態で飼われています。 明日葉三葉",
-                "236 329",
-                "3519",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56103/preview.jpg",
-                "https://honi-moly-yami.mushroomtrack.com/hls/YBmGp5l7G839q9LCiG-6_A/1768756211/56000/56103/56103.m3u8"
-            ],
-            [
-                "WAAA-594 「在我說可以之前不准給我射喔！」抓住普通抖M男子，玩弄他的奶頭！極限打手槍美巨乳痴女的無套性交散步 春陽萌花",
-                "192 983",
-                "1937",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56213/preview.jpg",
-                "https://anono-cloneing.mushroomtrack.com/hls/Mrpkhq1UkiabZxKy6iFQlQ/1768756249/56000/56213/56213.m3u8"
-            ],
-            [
-                "VDD-200 W脅迫スイートルーム 女医＆女性経営者in… 新村晶 北野未奈",
-                "763 478",
-                "7063",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56021/preview.jpg",
-                "https://akuma-trstin.mushroomtrack.com/hls/6FY9XZBwzBGc4QJzlwwM5w/1768756388/56000/56021/56021.m3u8"
-            ],
-            [
-                "START-494 3ヶ月前に出会った絶対挿入禁止の既婚者オナトモW不倫で、極限焦らしを超えた最初で最後の発情無制限中出しSEX。 小倉由菜",
-                "205 811",
-                "1157",
-                "https://assets-cdn.jable.tv/contents/videos_screenshots/56000/56199/preview.jpg",
-                "https://akuma-trstin.mushroomtrack.com/hls/LqZfYrisDT6C1gQkxsSADg/1768756200/56000/56199/56199.m3u8"
-            ],
+
             [
                 "WAAA-573 超專注接吻的自慰支援！滿嘴口水吸舔，體液濕透的緊密貼合內射高潮連連！沉溺在接吻聲音中的主觀ASMR規格！耳朵和大腦都融化！ 根尾明里",
                 "194 007",
@@ -319,21 +167,38 @@ async def _handleHotAv(q, cache):
         return {"message": []}
     time_now = int(time.time() * 1000)
     url = f"https://jable.tv/hot/{num}/?mode=async&function=get_block&block_id=list_videos_common_videos_list&sort_by=video_viewed&_={time_now}"
+    cache_url = f"https://jable.tv/hot/{num}/"
+    REDIS_URL = os.environ.get('REDIS_URL', None)
+    redis = None
+    try:
+        redis = Redis.from_url(REDIS_URL, decode_responses=True)
+        print("redis---- :", await redis.ping())
+    except Exception as e:
+        print(e)
+
+    if redis:
+        res = await redis.get(cache_url)
+        print("cache_url redis---- :", res)
+        if res:
+            data = json.loads(res)
+            if data and len(data) > 0:
+                return {"message": data}
+
 
     # return _tmp()
     urls_links = []
     browser_config = BrowserConfig()
-    browser_config.headless = True
+    browser_config.headless = False
     browser_config.enable_stealth = True
-    browser_config.browser_mode = 'docker'
+    browser_config.browser_mode = 'docker' if redis else 'dedicated'
     # browser_config.text_mode = True
     browser_config.user_agent = fake.chrome
-    browser_config.user_data_dir = '/home'
 
     run_config = CrawlerRunConfig()
     run_config.verbose = False
     run_config.stream = True
     run_config.semaphore_count = 12
+    # run_config.delay_before_return_html = 20000
 
     async with AsyncWebCrawler(config=browser_config) as crawler:
         result: CrawlResult = await crawler.arun(url, config=run_config)
@@ -359,8 +224,6 @@ async def _handleHotAv(q, cache):
             img = img[0] if len(img) > 0 else ''
             match = re.search(pattern, item_res.html)
 
-
-
             if match:
                 m3u8_link = match.group(1)
                 # print(f"提取到的链接: {m3u8_link}")
@@ -383,7 +246,11 @@ async def _handleHotAv(q, cache):
 
     if len(urls_links) > 0:
         print(f"一共 {len(urls_links)}")
-        return {"message": _sort_urls_links(urls_links)}
+        result_links = _sort_urls_links(urls_links)
+        if len(result_links) > 15 and redis:
+            await redis.setex(cache_url, 7200, json.dumps(result_links))
+            await redis.close()
+        return {"message": result_links}
     return {"message": []}
 
 
