@@ -43,6 +43,8 @@ jobs:
 
       # --- 3. 启动服务 ---
       - name: 3. 启动 Cloudflare 和 Uvicorn
+        env:
+          REDIS_URL: ${{ secrets.REDIS_URL }}
         run: |
           # 以后台模式启动 Cloudflare
           docker run -d --network="host" cloudflare/cloudflared:latest tunnel --no-autoupdate run --token ${{secrets.CLOUDFLARE_TOKEN}}
