@@ -245,10 +245,14 @@ async def _getCacheData(cache_url):
 async def _getDataFromOtherServer(q,cache, server_name)  -> dict:
     print(f'正在从备用服务器请求数据 --- {server_name}')
     url = f"https://{server_name}.xiaodu1234.xyz/search?q={q}&isKVM={False}&isAV={True}&cache={cache}"
-    async with httpx.AsyncClient() as client:
-        res = await client.get(url)
-        print(f"备用服务器 -- {server_name} 请求数据成功")
-        return res.json()
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.get(url, timeout=55)
+            print(f"备用服务器 -- {server_name} 请求数据成功")
+            return res.json()
+    except Exception as e:
+        print(f"备用服务器 -- {server_name} 请求数据失败", e)
+        return {"message": []}
 
 async def _handleHotAv(background_tasks, q, cache):
     global av_failure_count
