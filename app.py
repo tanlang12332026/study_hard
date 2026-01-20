@@ -277,7 +277,9 @@ async def _handleHotAv(background_tasks, q, cache):
         if len(datas) > 0:
             return {"message": datas}
         else:
-
+            print('正在重启服务器02')
+            background_tasks.add_task(trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, "danmu02.yaml",
+                                                             inputs={"reason": "Python API 触发"}))
             data: dict = await _getDataFromOtherServer(q, cache,"av03")
             datas = data.get('message', [])
             if len(datas) > 0:
@@ -287,9 +289,7 @@ async def _handleHotAv(background_tasks, q, cache):
                 background_tasks.add_task(trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, "danmu03.yaml",
                                                                  inputs={"reason": "Python API 触发"}))
 
-            print('正在重启服务器02')
-            background_tasks.add_task(trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, "danmu02.yaml",
-                                                             inputs={"reason": "Python API 触发"}))
+
 
     # return _tmp()
     urls_links = []
