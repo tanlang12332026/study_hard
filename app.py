@@ -379,7 +379,7 @@ async def _handleHotAv(background_tasks, q, cache):
         await redis.aclose()
     av_failure_count = av_failure_count + 1
 
-    if av_failure_count >= 3:
+    if av_failure_count >= 3 and WORKFLOW_FILE != 'danmu.yaml':
         av_failure_count = 0
         background_tasks.add_task(trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, WORKFLOW_FILE, inputs={"reason": "Python API 触发"}))
 
