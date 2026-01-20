@@ -9,7 +9,7 @@ on:
         default: '手动 调用'
 
 concurrency:
-  group: production
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
