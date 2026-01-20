@@ -301,12 +301,6 @@ async def _handleHotAv(background_tasks, q, cache):
         await crawler.close()
         await crawler.crawler_strategy.close()
         await crawler.crawler_strategy.browser_manager.close()
-        print(urls_links)
-        if len(urls_links) == 0:
-            av_failure_count = av_failure_count + 1
-            if redis:
-                await redis.aclose()
-            return {"message": []}
 
 
     end_time = time.perf_counter() - start_time
@@ -319,6 +313,7 @@ async def _handleHotAv(background_tasks, q, cache):
             await redis.setex(cache_url, 7200, json.dumps(result_links))
             await redis.aclose()
         return {"message": result_links}
+
     if redis:
         await redis.aclose()
     av_failure_count = av_failure_count + 1
