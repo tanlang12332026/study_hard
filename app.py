@@ -288,7 +288,7 @@ async def _handleHotAv(background_tasks, q, cache):
     run_config.stream = True
     run_config.semaphore_count = 12
     # run_config.delay_before_return_html = 20000
-    global av_failure_count
+
     async with AsyncWebCrawler(config=browser_config) as crawler:
         result: CrawlResult = await crawler.arun(url, config=run_config)
         # print(result.html)
