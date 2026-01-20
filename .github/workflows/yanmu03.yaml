@@ -1,8 +1,6 @@
-name: 弹幕
+name: av03
 
 on:
-  schedule:
-    - cron: "*/20 * * * *"
 
   workflow_dispatch:
     inputs:
@@ -51,10 +49,10 @@ jobs:
         env:
           REDIS_URL: ${{ secrets.REDIS_URL }}
           MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-          WORKFLOW_FILE: danmu.yaml
+          WORKFLOW_FILE: danmu03.yaml
         run: |
           # 以后台模式启动 Cloudflare
-          docker run -d --network="host" cloudflare/cloudflared:latest tunnel --no-autoupdate run --token ${{secrets.CLOUDFLARE_TOKEN}}
+          docker run -d --network="host" cloudflare/cloudflared:latest tunnel --no-autoupdate run --token ${{secrets.CLOUDFLARE_TOKEN03}}
           
           # 启动应用
           uvicorn app:app --host 0.0.0.0 --port 5173 --log-level info

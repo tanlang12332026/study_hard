@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import re
 import sys
 import asyncio
@@ -37,12 +38,17 @@ av_failure_count = 0  # 3此重启服务器
 MY_GITHUB_TOKEN = os.getenv("MY_GITHUB_TOKEN") if os.getenv("MY_GITHUB_TOKEN") else ""
 REPO_OWNER = "tanlang12332026"
 REPO_NAME = "study_hard"
-WORKFLOW_FILE = "danmu.yaml"
+WORKFLOW_FILE = os.getenv("WORKFLOW_FILE") if os.getenv("WORKFLOW_FILE") else "danmu.yaml"
 
 async def delayed_trigger():
-    await asyncio.sleep(60 * 20)
+
+    extra_time = [1, 3 , 5, 7]
+
+    extra_time = random.choice(extra_time)
+
+    await asyncio.sleep(60 * (20 + extra_time))
     trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, WORKFLOW_FILE,
-                                                     inputs={"reason": "启动后定时器触发"})
+                                                     inputs={"reason": "启动后定时器20分钟触发"})
 
 
 def _tmp():
@@ -236,7 +242,16 @@ async def _getCacheData(cache_url):
                 return redis, data
     return redis, None
 
+async def _getDataFromOtherServer(server_name)  -> dict:
+    print(f'正在从备用服务器请求数据 --- {server_name}')
+    url = f"https://{server_name}.xiaodu1234.xyz"
+    async with httpx.AsyncClient() as client:
+        res = await client.get(url)
+        print(f"备用服务器 -- {server_name} 请求数据成功")
+        return res.json()
+
 async def _handleHotAv(background_tasks, q, cache):
+    global av_failure_count
     num = int(q)
     start_time = time.perf_counter()
     if num > 1477 or num < 0:
@@ -248,6 +263,16 @@ async def _handleHotAv(background_tasks, q, cache):
     if redis and data:
         await redis.aclose()
         return {"message": data}
+
+    # 如果是主服务器
+    if WORKFLOW_FILE is 'danmu.yaml' and av_failure_count > 0:
+        # 去另外服务器获取数据
+        data:dict = await _getDataFromOtherServer("av02")
+        datas = data.get('message', [])
+        if len(datas) > 0:
+            return {"message": datas}
+        # 03
+        return await _getDataFromOtherServer("av03")
 
     # return _tmp()
     urls_links = []
