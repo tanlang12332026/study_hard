@@ -256,14 +256,17 @@ async def _getDataFromOtherServer(q,cache, server_name)  -> dict:
         print(f"备用服务器 -- {server_name} 请求数据失败", e)
         return {"message": []}
 
-async def _sleep02():
+async def _sleep02(background_tasks):
     global is_reload_av02
     await asyncio.sleep(60 * 2)
     is_reload_av02 = False
+    background_tasks.add_task(
+        trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, "danmu03.yaml"))
 
 async def _sleep03():
     global is_reload_av03
     await asyncio.sleep(60 * 2)
+
     is_reload_av03 = False
 
 async def _handleHotAv(background_tasks, q, cache):
@@ -295,7 +298,7 @@ async def _handleHotAv(background_tasks, q, cache):
                 print('正在重启服务器02')
                 background_tasks.add_task(trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, "danmu02.yaml",
                                                                  inputs={"reason": "Python API 触发"}))
-                asyncio.create_task(_sleep02())
+                asyncio.create_task(_sleep02(background_tasks))
                 is_reload_av02 = True
             data: dict = await _getDataFromOtherServer(q, cache,"av03")
             datas = data.get('message', [])
