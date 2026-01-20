@@ -35,6 +35,8 @@ app.add_middleware(GZipMiddleware, minimum_size=666)
 fake = FakeUserAgent()
 
 av_failure_count = 0  # 3此重启服务器
+is_reload_av02 = False
+is_reload_av03 = False
 MY_GITHUB_TOKEN = os.getenv("MY_GITHUB_TOKEN") if os.getenv("MY_GITHUB_TOKEN") else ""
 REPO_OWNER = "tanlang12332026"
 REPO_NAME = "study_hard"
@@ -254,8 +256,20 @@ async def _getDataFromOtherServer(q,cache, server_name)  -> dict:
         print(f"备用服务器 -- {server_name} 请求数据失败", e)
         return {"message": []}
 
+async def _sleep02():
+    global is_reload_av02
+    await asyncio.sleep(60 * 2)
+    is_reload_av02 = False
+
+async def _sleep03():
+    global is_reload_av03
+    await asyncio.sleep(60 * 2)
+    is_reload_av03 = False
+
 async def _handleHotAv(background_tasks, q, cache):
     global av_failure_count
+    global is_reload_av02
+    global is_reload_av03
     num = int(q)
     start_time = time.perf_counter()
     if num > 1477 or num < 0:
@@ -277,19 +291,22 @@ async def _handleHotAv(background_tasks, q, cache):
         if len(datas) > 0:
             return {"message": datas}
         else:
-            print('正在重启服务器02')
-            background_tasks.add_task(trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, "danmu02.yaml",
-                                                             inputs={"reason": "Python API 触发"}))
+            if not is_reload_av02 :
+                print('正在重启服务器02')
+                background_tasks.add_task(trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, "danmu02.yaml",
+                                                                 inputs={"reason": "Python API 触发"}))
+                asyncio.create_task(_sleep02())
             data: dict = await _getDataFromOtherServer(q, cache,"av03")
             datas = data.get('message', [])
             if len(datas) > 0:
                 return {"message": datas}
             else:
-                print('正在重启服务器03')
-                background_tasks.add_task(trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, "danmu03.yaml",
-                                                                 inputs={"reason": "Python API 触发"}))
-
-
+                if not is_reload_av03:
+                    print('正在重启服务器03')
+                    background_tasks.add_task(
+                        trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, "danmu03.yaml",
+                                               inputs={"reason": "Python API 触发"}))
+                    asyncio.create_task(_sleep03())
 
     # return _tmp()
     urls_links = []
