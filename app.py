@@ -48,7 +48,7 @@ async def delayed_trigger():
 
     extra_time = random.choice(extra_time)
 
-    await asyncio.sleep(60 * (20 + extra_time))
+    await asyncio.sleep(60 *6*(20 + extra_time))
     trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, WORKFLOW_FILE,
                                                      inputs={"reason": "启动后定时器20分钟触发"})
 
