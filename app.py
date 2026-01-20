@@ -265,7 +265,7 @@ async def _handleHotAv(background_tasks, q, cache):
         return {"message": data}
 
     # 如果是主服务器
-    if WORKFLOW_FILE is 'danmu.yaml' and av_failure_count > 0:
+    if WORKFLOW_FILE == 'danmu.yaml' and av_failure_count > 0:
         # 去另外服务器获取数据
         data:dict = await _getDataFromOtherServer("av02")
         datas = data.get('message', [])
