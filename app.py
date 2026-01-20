@@ -243,7 +243,7 @@ async def _getCacheData(cache_url):
     return redis, None
 
 async def _getDataFromOtherServer(q,cache, server_name)  -> dict:
-    print(f'正在从备用服务器请求数据 --- {server_name}')
+    print(f'正在从备用服务器请求数据 --- {server_name}', flush=True)
     url = f"https://{server_name}.xiaodu1234.xyz/search?q={q}&isKVM={False}&isAV={True}&cache={cache}"
     try:
         async with httpx.AsyncClient() as client:
@@ -271,6 +271,7 @@ async def _handleHotAv(background_tasks, q, cache):
     # 如果是主服务器
     if WORKFLOW_FILE == 'danmu.yaml' and av_failure_count > 0:
         # 去另外服务器获取数据
+        print(f'正在从备用服务器请求数据 ---', flush=True)
         data:dict = await _getDataFromOtherServer(q, cache,"av02")
         datas = data.get('message', [])
         if len(datas) > 0:
