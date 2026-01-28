@@ -269,14 +269,25 @@ async def _sleep03():
 
     is_reload_av03 = False
 
-async def _handleHotAv_h5(background_tasks, q, cache):
-    num = int(q)
+
+async def _handleHotAv_search(background_tasks, q, cache):
+    return await _handleHotAv_h5(background_tasks, q, cache, isSearch=True)
+
+async def _handleHotAv_h5(background_tasks, q, cache, isSearch=False):
     start_time = time.perf_counter()
     time_now = int(time.time() * 1000)
-    if num > 1477 or num < 0:
-        return {"message": []}
-    url = f"https://jable.tv/hot/{num}/?mode=async&function=get_block&block_id=list_videos_common_videos_list&sort_by=video_viewed&_={time_now}"
-    cache_url = f"https://jable.tv/hot/{num}/"
+    url = ''
+    cache_url = ''
+    if not isSearch:
+        num = int(q)
+        url = f"https://jable.tv/hot/{num}/?mode=async&function=get_block&block_id=list_videos_common_videos_list&sort_by=video_viewed&_={time_now}"
+        cache_url = f"https://jable.tv/hot/{num}/"
+        if num > 1477 or num < 0:
+            return {"message": []}
+    else:
+        url = f"https://jable.tv/search/{q}/"
+        cache_url = url
+
     redis, data = await _getCacheData(cache_url)
     if redis and data:
         await redis.aclose()
@@ -485,7 +496,7 @@ async def _handleSearchAV(background_tasks,q, cache):
     if q.isdigit():
         return await _handleHotAv_h5(background_tasks, q, cache)
 
-    return {"message": []}
+    return await _handleHotAv_search(background_tasks, q, cache)
 
 
 @app.get("/search")
