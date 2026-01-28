@@ -269,6 +269,69 @@ async def _sleep03():
 
     is_reload_av03 = False
 
+async def _handleHotAv_h5(background_tasks, q, cache):
+    num = int(q)
+    start_time = time.perf_counter()
+    time_now = int(time.time() * 1000)
+    if num > 1477 or num < 0:
+        return {"message": []}
+    url = f"https://jable.tv/hot/{num}/?mode=async&function=get_block&block_id=list_videos_common_videos_list&sort_by=video_viewed&_={time_now}"
+    cache_url = f"https://jable.tv/hot/{num}/"
+    redis, data = await _getCacheData(cache_url)
+    if redis and data:
+        await redis.aclose()
+        return {"message": data}
+
+    async with httpx.AsyncClient() as client:
+        res = await client.get(url, timeout=10)
+        # print(res.content)
+        root = Selector(text=str(res.content))
+        box = root.css('div.img-box.cover-md a::attr(href)').getall()
+        print(box)
+
+        tasks = []
+        urls_links = []
+        for url in box:
+            task = asyncio.create_task(client.get(url, timeout=10))
+            tasks.append(task)
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        for item_res in results:
+            if item_res.text == '':
+                continue
+            root = html.fromstring(item_res.text)
+            # 建议使用这个正则，它可以过滤掉引号
+            pattern = r"hlsUrl\s*=\s*'(.*?\.m3u8)'"
+            title = root.xpath('//*[@class="header-left"]/h4/text()')
+            title = title[0] if len(title) > 0 else ''
+            wcount = root.xpath('//*[@class="mr-3"][2]/text()')
+            wcount = wcount[0] if len(wcount) > 0 else '0'
+            likecount = root.xpath('//span[@class="count"]/text()')
+            likecount = likecount[0] if len(likecount) > 0 else '0'
+            img = root.xpath('//video[1]/@poster')
+            img = img[0] if len(img) > 0 else ''
+            match = re.search(pattern, item_res.text)
+
+            if match:
+                m3u8_link = match.group(1)
+                # print(f"提取到的链接: {m3u8_link}")
+                print((title, wcount, likecount, img))
+                urls_links.append([title, wcount, likecount, img, m3u8_link])
+        end_time = time.perf_counter() - start_time
+        print(f'耗时 ---{end_time}')
+
+        if len(urls_links) > 0:
+            print(f"一共 {len(urls_links)}")
+            result_links = _sort_urls_links(urls_links)
+            if len(result_links) > 15 and redis:
+                await redis.setex(cache_url, 7200, json.dumps(result_links))
+                await redis.aclose()
+            return {"message": result_links}
+        if redis:
+            await redis.aclose()
+        return {"message": []}
+
 async def _handleHotAv(background_tasks, q, cache):
     global av_failure_count
     global is_reload_av02
@@ -419,7 +482,7 @@ async def _handleSearchAV(background_tasks,q, cache):
         return {"message": []}
 
     if q.isdigit():
-        return await _handleHotAv(background_tasks, q, cache)
+        return await _handleHotAv_h5(background_tasks, q, cache)
 
     return {"message": []}
 
