@@ -283,11 +283,12 @@ async def _handleHotAv_h5(background_tasks, q, cache):
         return {"message": data}
 
     async with httpx.AsyncClient() as client:
+        print(url, flush=True)
         res = await client.get(url, timeout=10)
         # print(res.content)
         root = Selector(text=str(res.content))
         box = root.css('div.img-box.cover-md a::attr(href)').getall()
-        print(box)
+        print(box, flush=True)
 
         tasks = []
         urls_links = []
