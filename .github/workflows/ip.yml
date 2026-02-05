@@ -1,0 +1,8 @@
+name: ip.yml
+on:
+  workflow_dispatch:
+
+jobs:
+  ip:
+    runs-on: ubuntu-latest
+    container: ghcr.io/byjoey/yx-tools:latest
