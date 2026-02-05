@@ -10,24 +10,13 @@ concurrency:
 jobs:
   ip:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/byjoey/yx-tools:latest
-      options: --user root
+
     steps:
-      - name: 查看服务器网速
-        run: |
-          pip install speedtest-cli
-          speedtest
+      - name: clone
+        uses: actions/checkout@v4
       - name: 筛选ip
         run: |
-          echo "我当前实际所在的目录是: $(pwd)"
-          echo "镜像里的 /app 目录下有哪些文件:"
-          ls -lh /app
-          python3 /app/cloudflare_speedtest.py --mode beginner --count 5 --speed 0.1 --delay 333 
-          # 【关键点】打印结果到日志，省得每次都要下载文件看
-          echo "--- 优选结果展示 ---"
-          ls -al
-          # 拷贝到当前工作目录，确保 artifact 顺利抓取
+          ./CloudflareST_proxy_linux_amd64 -f Cloudflare.txt -n 200 -dn 10 -sl 0.1 -tl 333 -url https://speed.cloudflare.com/__down?bytes=20000000 -o result.csv
   
 
       - name: 保存结果文件
