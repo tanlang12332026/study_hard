@@ -7,12 +7,15 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/byjoey/yx-tools:latest
+      options: --user root
     steps:
       - name: 筛选ip
-        run: python3 /app/cloudflare_speedtest.py --mode beginner --count 1 --speed 1 --delay 2000 --region NRT
+        run: |
+          python3 /app/cloudflare_speedtest.py --mode beginner --count 1 --speed 1 --delay 2000 --region NRT
+          ls -lh /app/result.csv
 
       - name: Upload Logs as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: result-csv  # 下载时的文件名
-          path: ./result.csv             # 要保存的文件夹路径
+          path: /app/result.csv             # 要保存的文件夹路径
