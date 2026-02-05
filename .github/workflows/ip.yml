@@ -9,7 +9,7 @@ jobs:
       image: ghcr.io/byjoey/yx-tools:latest
     steps:
       - name: 筛选ip
-        run: python3 /app/cloudflare_speedtest.py --mode beginner --count 10 --speed 2 --delay 200 --region NRT
+        run: python3 /app/cloudflare_speedtest.py --mode beginner --count 1 --speed 1 --delay 2000 --region NRT
 
       - name: Upload Logs as Artifact
         uses: actions/upload-artifact@v4
