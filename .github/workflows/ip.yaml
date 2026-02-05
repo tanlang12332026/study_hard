@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
       - name: 筛选ip
         run: |
-          ./CloudflareST_proxy_linux_amd64 -f Cloudflare.txt -n 200 -dn 10 -sl 0.1 -tl 333 -url https://speed.cloudflare.com/__down?bytes=20000000 \
+          ./CloudflareST_proxy_linux_amd64 -f Cloudflare.txt -n 200 -dn 10 -sl 0.1 -tl 333 -url https://speed.cloudflare.com/__down?bytes=2000000 \
           -o result.csv -cfcolo HKG -debug
         
 
