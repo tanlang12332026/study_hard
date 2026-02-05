@@ -20,7 +20,7 @@ jobs:
           speedtest
       - name: 筛选ip
         run: |
-          python3 /app/cloudflare_speedtest.py --mode beginner --count 5 --speed 1 --delay 2000 --region NRT -n 20 -v
+          python3 /app/cloudflare_speedtest.py --mode beginner --count 5 --speed 1 --delay 2000 --region NRT 
           # 【关键点】打印结果到日志，省得每次都要下载文件看
           echo "--- 优选结果展示 ---"
           cat /app/result.csv
