@@ -57,9 +57,17 @@ async def delayed_trigger():
     extra_time = random.choice(extra_time)
 
     await asyncio.sleep(60 *6*(20 + extra_time))
+    await triggle_hugface()
     trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, WORKFLOW_FILE,
                                                      inputs={"reason": "启动后定时器20分钟触发"})
+async def triggle_hugface():
+    urls = ['https://tanlang001-sb.hf.space', 'https://jokkad-danmu-api.hf.space', 'https://jokkad-jab-tel.hf.space']
+    async with httpx.AsyncClient() as client:
+        tasks = []
+        for url in urls:
+            tasks.append(client.get(url, timeout=5))
 
+        await asyncio.gather(*tasks)
 
 def _tmp():
     data = {
