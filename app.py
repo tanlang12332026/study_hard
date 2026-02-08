@@ -61,7 +61,11 @@ async def delayed_trigger():
     trigger_github_actions(MY_GITHUB_TOKEN, REPO_OWNER, REPO_NAME, WORKFLOW_FILE,
                                                      inputs={"reason": "启动后定时器20分钟触发"})
 async def triggle_hugface():
-    urls = ['https://tanlang001-sb.hf.space', 'https://jokkad-danmu-api.hf.space', 'https://jokkad-jab-tel.hf.space']
+    urls = ['https://tanlang001-sb.hf.space',
+            'https://jokkad-danmu-api.hf.space',
+            'https://jokkad-jab-tel.hf.space',
+            'https://jokkad-vscode.hf.space/'
+            ]
     async with httpx.AsyncClient() as client:
         tasks = []
         for url in urls:
